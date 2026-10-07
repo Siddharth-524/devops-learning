@@ -1,0 +1,56 @@
+# Indentation is very important here
+version: '3.8'
+services:
+  mongodb:
+    # --rm -d are default options
+    image: 'mongo'
+    # The container name will be path_service-name if container_name is not defined
+    container_name: mongodb
+    volumes:
+      - data:/data/db
+    # environment:
+    ## Using : (colon)
+    #   MONGO_INITDB_ROOT_USERNAME: noah
+    #   MONGO_INITDB_ROOT_PASSWORD: secret
+    ## using - (dash) and = (equals sign)
+    # - MONGO_INITDB_ROOT_USERNAME=noah
+    env_file:
+      - ./env/mongo.env
+    # All services are using the same default network, though it can be manually added
+    # networks:
+    #   - goals-net
+  backend:
+    build: ./backend
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    #   args:
+    #     some-arg: 1
+    container_name: goals-backend
+    ports:
+      - '80:80'
+    volumes:
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+  frontend:
+    build: ./frontend
+    container_name: goals-frontend
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend/src:/app/src
+    # -it options
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+volumes:
+  # Named Volumes must be specified
+  # Anonymous Volumes and Bind Mounts are not
+  data:
+  logs:
